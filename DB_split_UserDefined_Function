@@ -1,0 +1,37 @@
+CREATE OR ALTER FUNCTION [dbo].[split]
+(    
+    @delimiter NVARCHAR(MAX),
+	@row_data NVARCHAR(MAX)
+)
+RETURNS @values TABLE 
+(
+    id INT IDENTITY(1,1),
+    data NVARCHAR(MAX)
+) 
+AS
+BEGIN 
+    DECLARE @iterator INT
+    SET @iterator = 1
+
+    DECLARE @found_index INT
+    SET @found_index = CHARINDEX(@delimiter,@row_data)
+
+    WHILE (@found_index > 0)
+    BEGIN
+        INSERT INTO @values (data)
+        SELECT 
+            Data = LTRIM(RTRIM(SUBSTRING(@row_data, 1, @found_index - 1)))
+
+        SET @row_data = SUBSTRING(@row_data,
+                @found_index + DATALENGTH(@delimiter) / 2,
+                LEN(@row_data))
+
+        SET @iterator = @iterator + 1
+        SET @found_index = CHARINDEX(@delimiter, @row_data)
+    END
+    
+    INSERT INTO @values (data)
+    SELECT data = LTRIM(RTRIM(@row_data))
+
+    RETURN
+END
